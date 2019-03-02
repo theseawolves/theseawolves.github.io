@@ -1,0 +1,670 @@
+<!doctype html>
+
+
+
+  
+
+
+<html class="theme-next mist use-motion">
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/vendors/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+  
+  
+  
+  
+
+  
+    
+    
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    
+    
+    <link href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&subset=latin,latin-ext" rel="stylesheet" type="text/css">
+  
+
+
+
+
+
+
+<link href="/vendors/font-awesome/css/font-awesome.min.css?v=4.4.0" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.0.1" rel="stylesheet" type="text/css">
+
+
+  <meta name="keywords" content="OS,汇编,">
+
+
+
+
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=5.0.1">
+
+
+
+
+
+
+<meta name="description" content="0x00 开宗明义对OS的兴趣一直都有。最近比较强。因为5月份广东红帽杯被血虐，想补强下二进制方面。后来发现自己之前的相关知识深度还不够，继续深入时，好多东西和OS绕不开。所以，在原来的基础上补下OS。写个OS这种标题，有点标题党，只是给自己定的一个目标。最终完成的功能包含以下，不能对比现在的Linux这种大型成熟的OS。  启动 基本的内存管理 多任务调度 一个简单的shell希望写的过程和实验">
+<meta name="keywords" content="OS,汇编">
+<meta property="og:type" content="article">
+<meta property="og:title" content="写个小操作系统1">
+<meta property="og:url" content="http://1codelife.com/2018/08/10/2018-8-os1/index.html">
+<meta property="og:site_name" content="1CodeLife">
+<meta property="og:description" content="0x00 开宗明义对OS的兴趣一直都有。最近比较强。因为5月份广东红帽杯被血虐，想补强下二进制方面。后来发现自己之前的相关知识深度还不够，继续深入时，好多东西和OS绕不开。所以，在原来的基础上补下OS。写个OS这种标题，有点标题党，只是给自己定的一个目标。最终完成的功能包含以下，不能对比现在的Linux这种大型成熟的OS。  启动 基本的内存管理 多任务调度 一个简单的shell希望写的过程和实验">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:image" content="http://1codelife.com/images/1530951823888.png">
+<meta property="og:image" content="http://1codelife.com/images/1530955947696.png">
+<meta property="og:image" content="http://1codelife.com/images/1530955971227.png">
+<meta property="og:image" content="http://1codelife.com/images/1530968051043.png">
+<meta property="og:image" content="http://1codelife.com/images/1531017963301.png">
+<meta property="og:updated_time" content="2019-03-02T14:29:14.456Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="写个小操作系统1">
+<meta name="twitter:description" content="0x00 开宗明义对OS的兴趣一直都有。最近比较强。因为5月份广东红帽杯被血虐，想补强下二进制方面。后来发现自己之前的相关知识深度还不够，继续深入时，好多东西和OS绕不开。所以，在原来的基础上补下OS。写个OS这种标题，有点标题党，只是给自己定的一个目标。最终完成的功能包含以下，不能对比现在的Linux这种大型成熟的OS。  启动 基本的内存管理 多任务调度 一个简单的shell希望写的过程和实验">
+<meta name="twitter:image" content="http://1codelife.com/images/1530951823888.png">
+
+
+
+<script type="text/javascript" id="hexo.configuration">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    scheme: 'Mist',
+    sidebar: {"position":"left","display":"post"},
+    fancybox: true,
+    motion: true,
+    duoshuo: {
+      userId: 0,
+      author: '博主'
+    }
+  };
+</script>
+
+
+
+
+  <link rel="canonical" href="http://1codelife.com/2018/08/10/2018-8-os1/">
+
+  <title> 写个小操作系统1 | 1CodeLife </title>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+
+
+<script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+            (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+          m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+  ga('create', 'UA-91250021-1', 'auto');
+  ga('send', 'pageview');
+</script>
+
+
+  <script type="text/javascript">
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "//hm.baidu.com/hm.js?826cac467c757190b2c8aa720a31068d";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+
+
+
+
+
+
+  
+  
+    
+  
+
+  <div class="container one-collumn sidebar-position-left page-post-detail ">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-meta ">
+  
+
+  <div class="custom-logo-site-title">
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <span class="site-title">1CodeLife</span>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+  <p class="site-subtitle"></p>
+</div>
+
+<div class="site-nav-toggle">
+  <button>
+    <span class="btn-bar"></span>
+    <span class="btn-bar"></span>
+    <span class="btn-bar"></span>
+  </button>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br>
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            归档
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                写个小操作系统1
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            <span class="post-meta-item-icon">
+              <i class="fa fa-calendar-o"></i>
+            </span>
+            <span class="post-meta-item-text">发表于</span>
+            <time itemprop="dateCreated" datetime="2018-08-10T13:00:00+08:00" content="2018-08-10">
+              2018-08-10
+            </time>
+          </span>
+
+          
+
+          
+            
+              <span class="post-comments-count">
+                &nbsp; | &nbsp;
+                <a href="/2018/08/10/2018-8-os1/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count ds-thread-count" data-thread-key="2018/08/10/2018-8-os1/" itemprop="commentsCount"></span>
+                </a>
+              </span>
+            
+          
+
+          
+
+          
+          
+
+          
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h1 id="0x00-开宗明义"><a href="#0x00-开宗明义" class="headerlink" title="0x00 开宗明义"></a>0x00 开宗明义</h1><p>对OS的兴趣一直都有。最近比较强。因为5月份广东红帽杯被血虐，想补强下二进制方面。后来发现自己之前的相关知识深度还不够，继续深入时，好多东西和OS绕不开。所以，在原来的基础上补下OS。写个OS这种标题，有点标题党，只是给自己定的一个目标。最终完成的功能包含以下，不能对比现在的Linux这种大型成熟的OS。</p>
+<ul>
+<li>启动</li>
+<li>基本的内存管理</li>
+<li>多任务调度</li>
+<li>一个简单的shell<br>希望写的过程和实验的过程能加深自己对OS的理解。</li>
+</ul>
+<p>以前看过Linux2.6的内核代码。启动的过程是，</p>
+<ul>
+<li>加载器把内核vmlinux，加载入内存，内核启动开始。</li>
+<li>进入保护模式，开启分页</li>
+<li>获取主机的信息。内存，cpu，中断。。</li>
+<li>建立内存管理数据</li>
+<li>建立第一个进程</li>
+<li>启动shell<a id="more"></a>
+当然很多细节没有展开。<br>我的想法是和这个流程相似。当然有些实现的细节，可能会有差别。会参考以下内容</li>
+<li>《自己动手写操作系统》</li>
+<li>《使用开源软件写操作系统》</li>
+<li>Linux 0.11的源码</li>
+</ul>
+<p>这里，会着重从加载开始。有必要学习下汇编。所以，加载器我会自己写，参考的两本书，关于加载器的有些细节，没有说明，我会尽可能把自己已理解的说出来。我还专门买了本 Professional Assembly Language的中译本，来作为At&amp;t汇编的参考。</p>
+<h1 id="0x01-加载器"><a href="#0x01-加载器" class="headerlink" title="0x01 加载器"></a>0x01 加载器</h1><p>加载器是OS启动的第一步。在使用PC的日常中，会出现磁盘主引导坏掉的情况，电脑会提示，No boot loader found。</p>
+<p><img src="/images/1530951823888.png" alt="Alt text">  </p>
+<p>这是在Virtualbox里，找不到引导时的提示。结果就是OS启动不了了。<br>加载器是什么：<br>加载器是位于磁盘第一个扇区的特殊程序，它由BIOS加载，它负责加载OS的代码到特定位置，然后把执行权交给OS的初始化代码。</p>
+<p>BIOS：<br>Basic Input/Output System。它是固化在主板芯片里的一段代码，也叫固件(Firmware)，<br>BIOS，其实才是电脑接通电源后执行的第一个程序。加电后，CPU会去内存固定的位置取指令执行，BIOS的代码会放在那个位置。它会在内存它的职能如下：</p>
+<ul>
+<li>上电自检<br>台式机在启动时，能听到‘滴’的一声，是主板在自检。如果出现异常，常见的是内存金手指接触不良，电脑就无法启动。</li>
+<li>加载加加载器<br>这个工作是在自检之后。如果自检正常，BIOS会把启动设备（磁盘，软盘，U盘）第一个磁道加载到内存中，然后，将执行权给这个加载器。</li>
+<li>系统设置<br>BIOS会探测系统的硬件配置。所以在BIOS中，会看到内存大小，CPU的频率等信息。</li>
+<li>中断<br>BIOS是为加载器的执行提供了环境。没有这个环境的话，加载器无法运行。</li>
+</ul>
+<p>软件的运行需要环境的支持。比如，常用的Office软件，是运行在Windows操作系统上的。Windows操作系统，需要基本的内存，CPU，和外围设备的支持，还有驱动程序。<br>所以说运行环境分为两部分：软件和硬件。<br>但当电脑刚上电时，主板上所有的芯片，都处于初始状态，此时只有硬件环境，BIOS就是在这样的环境下运行的。<br>当加载器运行时，已经具备了一定的软件环境了。对于X86主机来说，此时的环境是实地址模式。<br>可用内存空间为:1M<br>因为：此时的地址总线宽度为16，一次的寻址空间为2^16, 64kB。Intel使用了内存分段技术，地址总线实际宽度为20,最大内存为1M。分为16个段。<br>逻辑地址表达形式为：段：偏移<br>计算物理地址是：段×64KB + 偏移<br>当加载器运行时，内存可以用的大小有1M了。中断也可以用了，稍微设置下栈也可以用。</p>
+<p>我们要写一个加载器，知道以上的信息了。还需要以下信息，加载器是怎么加载到内存的，如何才能开始执行。</p>
+<ul>
+<li>BIOS会把引导扇区512字节的内容加载到0x0000:0x7c00的位置，然后，跳转到此位置，开始执行。没错前面的0x0000就是段地址。0x7c00是段内偏移地址。<br>定加载器之前，熟悉下执行环境。<br>我使用的工具是bochs，可以调试OS，很牛的一个模拟器。<br>我是自己编译的，安装在/opt目录下，不影响系统。</li>
+</ul>
+<p><img src="/images/1530955947696.png" alt="Alt text"><br><img src="/images/1530955971227.png" alt="Alt text">  </p>
+<p>看到了吧。</p>
+<p>看参考书里，代码里都有如下的处理：<br>参考书1：.org 0x7c00<br>参考书2：在链接脚本里，加的 .=0x7c00</p>
+<p>倒是觉得，这样做的原因，两书原因都没有说明白。确实是将代码开始的位置，对齐为0x7c00，但为什么是这样做就能达到效果了呢？<br>这里其实跟代码的链接和加载过程有关。在常规的OS里，代码编译好之后，生成的可执行文件里指令其实是可以重定位。就是在加载时，加载器会修改程序的入口偏移量。<br>但是在加载器中，加载器是由BIOS直接加载进内存，里面的指令的偏移量是不会变的。也就是说，默认的话，编译器是把第一条指令偏移量为0,如果其中有变量的话，变量的地址就是绝对的地址。此时如果加载到了0x7c00，但变量的位置地址没有修正的话，这时访问绝对地址，是肯定是访问不到的。</p>
+<p>这里拿书中的代码来实验下。<br>1 设置不加载到0x7c00，同样能显示出字符来。nasm汇编格式<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">    mov ax, cs                                                                     </span><br><span class="line">    mov ds, ax                                                                  </span><br><span class="line">    mov es, ax                                                                  </span><br><span class="line">    mov ah, 0x0e                                                                </span><br><span class="line">    mov al, 97                                                                  </span><br><span class="line">    mov bl, 0x00                                                                </span><br><span class="line">    int 10h                                                                     </span><br><span class="line">    jmp $                                                                       </span><br><span class="line">                                                                                </span><br><span class="line">times 510-($-$$) db 0                                                           </span><br><span class="line">dw 0xaa55</span><br></pre></td></tr></table></figure></p>
+<p>参考书里第一个代码，去掉了开头的org 0x7c00，不引用字符串的地址和调用函数DispStr。修改后的代码，调用int 10h的中断在屏幕上显示一个a,对应的ASCII是97.运行后，屏幕上成功出现了一个字母a。说明理解是对的。<br><img src="/images/1530968051043.png" alt="Alt text">  </p>
+<p>如果想显示一个字符串呢。<br>先分析下这段代码，<br>前3行是设置环境的，为什么是这样设置，书中也没有说。前面说过，BIOS加载第一个扇区后，会跳到0x0000:0x7c00去执行，这里的0x0000是指令的段地址。指令的段地址，是放在cs中的。也就是说，刚开始时，只有cs的值是确定的。ds是数据段，因为原来的代码里用到了BootMessage变量，所以要设置ds，es是额外的寄存器，没有用到时，本来是不用设置的。这里我们的代码里没有用到，所以也可以去掉。</p>
+<p>经过研究后，可以显示一个字符串的at&amp;t的代码如下：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line">.code16</span><br><span class="line">.text</span><br><span class="line">        mov $0x1, %ax</span><br><span class="line">        mov %ax, %ds</span><br><span class="line">        movb $&apos;H&apos;, (0x0000)</span><br><span class="line">        movb $&apos;e&apos;, (0x0001)</span><br><span class="line">        movb $&apos;l&apos;, (0x0002)</span><br><span class="line">        movb $&apos;l&apos;, (0x0003)</span><br><span class="line">        movb $&apos;o&apos;, (0x0004)</span><br><span class="line">        movb $&apos;,&apos;, (0x0005)</span><br><span class="line">        movb $&apos;O&apos;, (0x0006)</span><br><span class="line">        movb $&apos;S&apos;, (0x0007)</span><br><span class="line">        movb $&apos;w&apos;, (0x0008)</span><br><span class="line">        mov $0x0201, %dx</span><br><span class="line">        mov $0, %bh</span><br><span class="line">        mov $0x0, %bp</span><br><span class="line">        mov $9, %cx</span><br><span class="line">        mov $0x13, %ah</span><br><span class="line">        mov $0x01, %bl</span><br><span class="line">        mov $0, %al</span><br><span class="line">        int $0x10</span><br><span class="line">        jmp .</span><br><span class="line"></span><br><span class="line">.org 510 </span><br><span class="line">.word 0xaa55</span><br></pre></td></tr></table></figure></p>
+<p>编译的命令是<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">as -o hello.o hello.s</span><br><span class="line">ld -o hello.bin --oformat=binary hello.o</span><br><span class="line">dd if=hello.bin of=hello.img bs=512 count=1</span><br><span class="line">dd if=/dev/zero of=hello.img skip=1 seek=1 bs=512 count=2879</span><br></pre></td></tr></table></figure></p>
+<p>生成的hello.img就是一个虚拟的软盘。加载到bochs里，就能显示出字符串了<br><img src="/images/1531017963301.png" alt="Alt text"><br>有兴趣的话，可以多显示一些。定字符串时的地址使用的是绝对，担心和代码段有冲突，将ds值置为1,使用的内存是<br>0x0001:0x0000 - 0x0001:0xffff<br>内存里的变量，严格来说都是数据，Intel实模式下，就是这样的规则。<br>注意，向地址内传送数据时,movb后的b不可少。少了它编译器就不知道要操作的内存单元是多大的了。</p>
+<p>段寄存器<br>经过把玩实模式的一些实例，对段寄存器也有了更深入的理解。<br>cs，就是代码段的段地址。它配合ip寄存器，指示了下个指令的位置。跳转时，如果是远跳转的话，cs寄存器的值也是会变的，但其他情况下，我们不会修改这个寄存器。<br>ds，数据段。这个比较自由。想把数据存在什么位置，都可以直接操作它。极端来说，我们可以设置ds的值和cs同段，把当前的代码修改掉。有点像二进制里的控制流劫持一样。为什么能这样做呢？因为实模式里没有任何保护机制。这也是后面保护模式优势。在编写汇编代码时，程序员要对内存的布局非常清楚，哪段内存是什么样的用途，要不然，自己把自己玩死了。<br>ss, 栈段。这个段是用来设置栈的。设置了它之后，再设置下sp和bp，就手动建立起来了一个栈。当然程序里可以有多个栈。切换到不同栈时，正确设置ss，sp, bp的值就可以了。<br>gs,fs,es,额外段。8086提供的备用的段。除了在个别命令中有特别用途，这个程序员可以随便用。</p>
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/OS/" rel="tag">#OS</a>
+          
+            <a href="/tags/汇编/" rel="tag">#汇编</a>
+          
+        </div>
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2018/06/26/lvm_learning/" rel="next" title="Linux动态扩展LVM分区">
+                <i class="fa fa-chevron-left"></i> Linux动态扩展LVM分区
+              </a>
+            
+          </div>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2018/08/14/2018-8-ctf-tools/" rel="prev" title="CTF PWN工具篇1-pwntools">
+                CTF PWN工具篇1-pwntools <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+  <div class="comments" id="comments">
+    
+      <div class="ds-thread" data-thread-key="2018/08/10/2018-8-os1/" data-title="写个小操作系统1" data-url="http://1codelife.com/2018/08/10/2018-8-os1/">
+      </div>
+    
+  </div>
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview sidebar-panel ">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+          <img class="site-author-image" itemprop="image" src="https://octodex.github.com/images/skitchtocat.png" alt="Quay & LinLin">
+          <p class="site-author-name" itemprop="name">Quay & LinLin</p>
+          <p class="site-description motion-element" itemprop="description"></p>
+        </div>
+        <nav class="site-state motion-element">
+          <div class="site-state-item site-state-posts">
+            <a href="/archives">
+              <span class="site-state-item-count">24</span>
+              <span class="site-state-item-name">日志</span>
+            </a>
+          </div>
+
+          
+            <div class="site-state-item site-state-categories">
+              <a href="/categories">
+                <span class="site-state-item-count">14</span>
+                <span class="site-state-item-name">分类</span>
+              </a>
+            </div>
+          
+
+          
+            <div class="site-state-item site-state-tags">
+              
+                <span class="site-state-item-count">38</span>
+                <span class="site-state-item-name">标签</span>
+              
+            </div>
+          
+
+        </nav>
+
+        
+
+        <div class="links-of-author motion-element">
+          
+        </div>
+
+        
+        
+
+        
+        
+
+      </section>
+
+      
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+            
+              
+            
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#0x00-开宗明义"><span class="nav-number">1.</span> <span class="nav-text">0x00 开宗明义</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#0x01-加载器"><span class="nav-number">2.</span> <span class="nav-text">0x01 加载器</span></a></li></ol></div>
+            
+          </div>
+        </section>
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2019</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Quay & LinLin</span>
+</div>
+
+<div class="powered-by">
+  由 <a class="theme-link" href="http://hexo.io">Hexo</a> 强力驱动
+</div>
+
+<div class="theme-info">
+  主题 -
+  <a class="theme-link" href="https://github.com/iissnan/hexo-theme-next">
+    NexT.Mist
+  </a>
+</div>
+
+        
+
+        
+      </div>
+    </footer>
+
+    <div class="back-to-top">
+      <i class="fa fa-arrow-up"></i>
+    </div>
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+  
+  <script type="text/javascript" src="/vendors/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script type="text/javascript" src="/vendors/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  
+  <script type="text/javascript" src="/vendors/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  <script type="text/javascript" src="/vendors/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/vendors/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/vendors/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.0.1"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.0.1"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.0.1"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.0.1"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.0.1"></script>
+
+
+
+  
+
+  
+    
+  
+
+  <script type="text/javascript">
+    var duoshuoQuery = {short_name:"quay"};
+    (function() {
+      var ds = document.createElement('script');
+      ds.type = 'text/javascript';ds.async = true;
+      ds.id = 'duoshuo-script';
+      ds.src = (document.location.protocol == 'https:' ? 'https:' : 'http:') + '//static.duoshuo.com/embed.js';
+      ds.charset = 'UTF-8';
+      (document.getElementsByTagName('head')[0]
+      || document.getElementsByTagName('body')[0]).appendChild(ds);
+    })();
+  </script>
+
+  
+    
+    <script src="/vendors/ua-parser-js/dist/ua-parser.min.js?v=0.7.9"></script>
+    <script src="/js/src/hook-duoshuo.js"></script>
+  
+
+
+
+
+
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

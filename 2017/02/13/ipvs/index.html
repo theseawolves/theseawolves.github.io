@@ -1,0 +1,646 @@
+<!doctype html>
+
+
+
+  
+
+
+<html class="theme-next mist use-motion">
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/vendors/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+  
+  
+  
+  
+
+  
+    
+    
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    
+    
+    <link href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&subset=latin,latin-ext" rel="stylesheet" type="text/css">
+  
+
+
+
+
+
+
+<link href="/vendors/font-awesome/css/font-awesome.min.css?v=4.4.0" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.0.1" rel="stylesheet" type="text/css">
+
+
+  <meta name="keywords" content="LVS,服务器配置,">
+
+
+
+
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=5.0.1">
+
+
+
+
+
+
+<meta name="description" content="LVS配置命令理解1上周末对照着Ubuntu LVS配置 的教程初步熟悉了ubuntu下LVS的配置过程中。这对于想掌握其原理的人来说是不够的。配置的命令有以下几条： ifconfig来为当前的网卡配置虚拟IP。其中同样通过在CSDN上搜索，可以知道，通过在eth0（网卡接口名称）后加“:n”，其中n为N+（正整数），就可以为网卡配置多个虚拟IP地址。这样的IP地址是不会有真实的数据经过它。">
+<meta name="keywords" content="LVS,服务器配置">
+<meta property="og:type" content="article">
+<meta property="og:title" content="LVS配置命令理解1">
+<meta property="og:url" content="http://1codelife.com/2017/02/13/ipvs/index.html">
+<meta property="og:site_name" content="1CodeLife">
+<meta property="og:description" content="LVS配置命令理解1上周末对照着Ubuntu LVS配置 的教程初步熟悉了ubuntu下LVS的配置过程中。这对于想掌握其原理的人来说是不够的。配置的命令有以下几条： ifconfig来为当前的网卡配置虚拟IP。其中同样通过在CSDN上搜索，可以知道，通过在eth0（网卡接口名称）后加“:n”，其中n为N+（正整数），就可以为网卡配置多个虚拟IP地址。这样的IP地址是不会有真实的数据经过它。">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:updated_time" content="2019-03-02T14:29:14.456Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="LVS配置命令理解1">
+<meta name="twitter:description" content="LVS配置命令理解1上周末对照着Ubuntu LVS配置 的教程初步熟悉了ubuntu下LVS的配置过程中。这对于想掌握其原理的人来说是不够的。配置的命令有以下几条： ifconfig来为当前的网卡配置虚拟IP。其中同样通过在CSDN上搜索，可以知道，通过在eth0（网卡接口名称）后加“:n”，其中n为N+（正整数），就可以为网卡配置多个虚拟IP地址。这样的IP地址是不会有真实的数据经过它。">
+
+
+
+<script type="text/javascript" id="hexo.configuration">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    scheme: 'Mist',
+    sidebar: {"position":"left","display":"post"},
+    fancybox: true,
+    motion: true,
+    duoshuo: {
+      userId: 0,
+      author: '博主'
+    }
+  };
+</script>
+
+
+
+
+  <link rel="canonical" href="http://1codelife.com/2017/02/13/ipvs/">
+
+  <title> LVS配置命令理解1 | 1CodeLife </title>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+
+
+<script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+            (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+          m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+  ga('create', 'UA-91250021-1', 'auto');
+  ga('send', 'pageview');
+</script>
+
+
+  <script type="text/javascript">
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "//hm.baidu.com/hm.js?826cac467c757190b2c8aa720a31068d";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+
+
+
+
+
+
+  
+  
+    
+  
+
+  <div class="container one-collumn sidebar-position-left page-post-detail ">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-meta ">
+  
+
+  <div class="custom-logo-site-title">
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <span class="site-title">1CodeLife</span>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+  <p class="site-subtitle"></p>
+</div>
+
+<div class="site-nav-toggle">
+  <button>
+    <span class="btn-bar"></span>
+    <span class="btn-bar"></span>
+    <span class="btn-bar"></span>
+  </button>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br>
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            归档
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                LVS配置命令理解1
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            <span class="post-meta-item-icon">
+              <i class="fa fa-calendar-o"></i>
+            </span>
+            <span class="post-meta-item-text">发表于</span>
+            <time itemprop="dateCreated" datetime="2017-02-13T22:52:10+08:00" content="2017-02-13">
+              2017-02-13
+            </time>
+          </span>
+
+          
+            <span class="post-category">
+              &nbsp; | &nbsp;
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+              
+                <span itemprop="about" itemscope itemtype="https://schema.org/Thing">
+                  <a href="/categories/系统运维/" itemprop="url" rel="index">
+                    <span itemprop="name">系统运维</span>
+                  </a>
+                </span>
+
+                
+                
+
+              
+            </span>
+          
+
+          
+            
+              <span class="post-comments-count">
+                &nbsp; | &nbsp;
+                <a href="/2017/02/13/ipvs/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count ds-thread-count" data-thread-key="2017/02/13/ipvs/" itemprop="commentsCount"></span>
+                </a>
+              </span>
+            
+          
+
+          
+
+          
+          
+
+          
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h1 id="LVS配置命令理解1"><a href="#LVS配置命令理解1" class="headerlink" title="LVS配置命令理解1"></a>LVS配置命令理解1</h1><p>上周末对照着<a href="http://blog.csdn.net/lihancheng/article/details/47152499" target="_blank" rel="noopener">Ubuntu LVS配置 </a>的教程初步熟悉了ubuntu下LVS的配置过程中。这对于想掌握其原理的人来说是不够的。<br>配置的命令有以下几条：</p>
+<h2 id="ifconfig来为当前的网卡配置虚拟IP。"><a href="#ifconfig来为当前的网卡配置虚拟IP。" class="headerlink" title="ifconfig来为当前的网卡配置虚拟IP。"></a>ifconfig来为当前的网卡配置虚拟IP。</h2><p>其中同样通过在CSDN上搜索，可以知道，通过在eth0（网卡接口名称）后加“:n”，其中n为N+（正整数），就可以为网卡配置多个虚拟IP地址。这样的IP地址是不会有真实的数据经过它。<br><a id="more"></a><br>比如我的电脑上只有一个无线网卡，用ifconfig命令得到的回显中，显示名称是wlps1s0。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line">lin@lin-pc2:~/Documents/ops$ ifconfig</span><br><span class="line">lo        Link encap:Local Loopback  </span><br><span class="line">          inet addr:127.0.0.1  Mask:255.0.0.0</span><br><span class="line">          inet6 addr: ::1/128 Scope:Host</span><br><span class="line">          UP LOOPBACK RUNNING  MTU:65536  Metric:1</span><br><span class="line">          RX packets:614 errors:0 dropped:0 overruns:0 frame:0</span><br><span class="line">          TX packets:614 errors:0 dropped:0 overruns:0 carrier:0</span><br><span class="line">          collisions:0 txqueuelen:1</span><br><span class="line">          RX bytes:57615 (57.6 KB)  TX bytes:57615 (57.6 KB)</span><br><span class="line"></span><br><span class="line">wlp1s0    Link encap:Ethernet  HWaddr d0:57:7b:b0:a1:d0  </span><br><span class="line">          inet addr:192.168.31.172  Bcast:192.168.31.255  Mask:255.255.255.0</span><br><span class="line">          inet6 addr: fe80::2805:4caf:e64f:ff0d/64 Scope:Link</span><br><span class="line">          UP BROADCAST RUNNING MULTICAST  MTU:1500  Metric:1</span><br><span class="line">          RX packets:2241 errors:0 dropped:0 overruns:0 frame:0</span><br><span class="line">          TX packets:1901 errors:0 dropped:0 overruns:0 carrier:0</span><br><span class="line">          collisions:0 txqueuelen:1000</span><br><span class="line">          RX bytes:1512337 (1.5 MB)  TX bytes:394920 (394.9 KB)</span><br></pre></td></tr></table></figure></p>
+<p>其中lo为本地的回环接口。LVS配置过程中也要使用这个接口。可以得到我的局域网IP网络号为192.168.31.x。那么如下的命令可以为我的无线网卡添加一个虚拟IP。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">lin@lin-pc2:~/Documents/ops$ sudo ifconfig wlp1s0:1 192.168.31.173 netmask 255.255.255.0</span><br></pre></td></tr></table></figure></p>
+<p>再次使用ifconfig命令得到的回显为：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line">lin@lin-pc2:~/Documents/ops$ ifconfig</span><br><span class="line">lo        Link encap:Local Loopback  </span><br><span class="line">          inet addr:127.0.0.1  Mask:255.0.0.0</span><br><span class="line">          inet6 addr: ::1/128 Scope:Host</span><br><span class="line">          UP LOOPBACK RUNNING  MTU:65536  Metric:1</span><br><span class="line">          RX packets:672 errors:0 dropped:0 overruns:0 frame:0</span><br><span class="line">          TX packets:672 errors:0 dropped:0 overruns:0 carrier:0</span><br><span class="line">          collisions:0 txqueuelen:1</span><br><span class="line">          RX bytes:65106 (65.1 KB)  TX bytes:65106 (65.1 KB)</span><br><span class="line"></span><br><span class="line">wlp1s0    Link encap:Ethernet  HWaddr d0:57:7b:b0:a1:d0  </span><br><span class="line">          inet addr:192.168.31.172  Bcast:192.168.31.255  Mask:255.255.255.0</span><br><span class="line">          inet6 addr: fe80::2805:4caf:e64f:ff0d/64 Scope:Link</span><br><span class="line">          UP BROADCAST RUNNING MULTICAST  MTU:1500  Metric:1</span><br><span class="line">          RX packets:3001 errors:0 dropped:0 overruns:0 frame:0</span><br><span class="line">          TX packets:2249 errors:0 dropped:0 overruns:0 carrier:0</span><br><span class="line">          collisions:0 txqueuelen:1000</span><br><span class="line">          RX bytes:2382550 (2.3 MB)  TX bytes:459282 (459.2 KB)</span><br><span class="line"></span><br><span class="line">wlp1s0:1  Link encap:Ethernet  HWaddr d0:57:7b:b0:a1:d0  </span><br><span class="line">          inet addr:192.168.31.173  Bcast:192.168.31.255  Mask:255.255.255.0</span><br><span class="line">          UP BROADCAST RUNNING MULTICAST  MTU:1500  Metric:1</span><br></pre></td></tr></table></figure></p>
+<p>可以看到已经新增了一个虚拟IP。可以注意到这个虚拟IP对应的接口，没有显示接收，发送的数据包信息，却可以在局域网中ping通这个IP地址。原因是，它只是一个虚拟的，真正的数据包还是经过wlp1s0这个接口发送和接收的。</p>
+<h2 id="启动IP包转发功能"><a href="#启动IP包转发功能" class="headerlink" title="启动IP包转发功能"></a>启动IP包转发功能</h2><p>ubuntu内核中默认是不支持IP包转发的。因为ubuntu是作为终端操作系统来运行的，IP包转发是路由器的功能。然而，强大的内核可配置性，允许我们改变这样的默认设置，使它支持包转发。这也是为什么，ubuntu操作系统中支持wifi热点搭建的原因。控制这个选项的变量是在/proc/sys/net/ipv4/ip_forward文件中写着的。启动的方法有两种。</p>
+<h3 id="1-直接在文件中写入1"><a href="#1-直接在文件中写入1" class="headerlink" title="1. 直接在文件中写入1"></a>1. 直接在文件中写入1</h3><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">#echo &quot;1&quot; /proc/sys/net/ipv4/ip_forward</span><br></pre></td></tr></table></figure>
+<p>命令前面的#表示这个命令是需要有root权限的。</p>
+<h3 id="2-通过sysctl命令来修改"><a href="#2-通过sysctl命令来修改" class="headerlink" title="2. 通过sysctl命令来修改"></a>2. 通过sysctl命令来修改</h3><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">#sysctl net.ipv4.ip_forward=1</span><br></pre></td></tr></table></figure>
+<p>同样需要root权限，都能达到目的。sysctl是一个非常有用的在内核运行时改变内核参数的工具。</p>
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/LVS/" rel="tag">#LVS</a>
+          
+            <a href="/tags/服务器配置/" rel="tag">#服务器配置</a>
+          
+        </div>
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2017/01/31/positioning-in-css/" rel="next" title="CSS中的定位（position）">
+                <i class="fa fa-chevron-left"></i> CSS中的定位（position）
+              </a>
+            
+          </div>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2017/03/03/max-symmetry-substring/" rel="prev" title="求最长子对称字符串算法">
+                求最长子对称字符串算法 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+  <div class="comments" id="comments">
+    
+      <div class="ds-thread" data-thread-key="2017/02/13/ipvs/" data-title="LVS配置命令理解1" data-url="http://1codelife.com/2017/02/13/ipvs/">
+      </div>
+    
+  </div>
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview sidebar-panel ">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+          <img class="site-author-image" itemprop="image" src="https://octodex.github.com/images/skitchtocat.png" alt="Quay & LinLin">
+          <p class="site-author-name" itemprop="name">Quay & LinLin</p>
+          <p class="site-description motion-element" itemprop="description"></p>
+        </div>
+        <nav class="site-state motion-element">
+          <div class="site-state-item site-state-posts">
+            <a href="/archives">
+              <span class="site-state-item-count">24</span>
+              <span class="site-state-item-name">日志</span>
+            </a>
+          </div>
+
+          
+            <div class="site-state-item site-state-categories">
+              <a href="/categories">
+                <span class="site-state-item-count">14</span>
+                <span class="site-state-item-name">分类</span>
+              </a>
+            </div>
+          
+
+          
+            <div class="site-state-item site-state-tags">
+              
+                <span class="site-state-item-count">38</span>
+                <span class="site-state-item-name">标签</span>
+              
+            </div>
+          
+
+        </nav>
+
+        
+
+        <div class="links-of-author motion-element">
+          
+        </div>
+
+        
+        
+
+        
+        
+
+      </section>
+
+      
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+            
+              
+            
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#LVS配置命令理解1"><span class="nav-number">1.</span> <span class="nav-text">LVS配置命令理解1</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#ifconfig来为当前的网卡配置虚拟IP。"><span class="nav-number">1.1.</span> <span class="nav-text">ifconfig来为当前的网卡配置虚拟IP。</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#启动IP包转发功能"><span class="nav-number">1.2.</span> <span class="nav-text">启动IP包转发功能</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#1-直接在文件中写入1"><span class="nav-number">1.2.1.</span> <span class="nav-text">1. 直接在文件中写入1</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-通过sysctl命令来修改"><span class="nav-number">1.2.2.</span> <span class="nav-text">2. 通过sysctl命令来修改</span></a></li></ol></li></ol></li></ol></div>
+            
+          </div>
+        </section>
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2019</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Quay & LinLin</span>
+</div>
+
+<div class="powered-by">
+  由 <a class="theme-link" href="http://hexo.io">Hexo</a> 强力驱动
+</div>
+
+<div class="theme-info">
+  主题 -
+  <a class="theme-link" href="https://github.com/iissnan/hexo-theme-next">
+    NexT.Mist
+  </a>
+</div>
+
+        
+
+        
+      </div>
+    </footer>
+
+    <div class="back-to-top">
+      <i class="fa fa-arrow-up"></i>
+    </div>
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+  
+  <script type="text/javascript" src="/vendors/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script type="text/javascript" src="/vendors/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  
+  <script type="text/javascript" src="/vendors/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  <script type="text/javascript" src="/vendors/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/vendors/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/vendors/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.0.1"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.0.1"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.0.1"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.0.1"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.0.1"></script>
+
+
+
+  
+
+  
+    
+  
+
+  <script type="text/javascript">
+    var duoshuoQuery = {short_name:"quay"};
+    (function() {
+      var ds = document.createElement('script');
+      ds.type = 'text/javascript';ds.async = true;
+      ds.id = 'duoshuo-script';
+      ds.src = (document.location.protocol == 'https:' ? 'https:' : 'http:') + '//static.duoshuo.com/embed.js';
+      ds.charset = 'UTF-8';
+      (document.getElementsByTagName('head')[0]
+      || document.getElementsByTagName('body')[0]).appendChild(ds);
+    })();
+  </script>
+
+  
+    
+    <script src="/vendors/ua-parser-js/dist/ua-parser.min.js?v=0.7.9"></script>
+    <script src="/js/src/hook-duoshuo.js"></script>
+  
+
+
+
+
+
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

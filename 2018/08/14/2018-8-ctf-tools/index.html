@@ -1,0 +1,643 @@
+<!doctype html>
+
+
+
+  
+
+
+<html class="theme-next mist use-motion">
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/vendors/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+  
+  
+  
+  
+
+  
+    
+    
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    
+    
+    <link href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&subset=latin,latin-ext" rel="stylesheet" type="text/css">
+  
+
+
+
+
+
+
+<link href="/vendors/font-awesome/css/font-awesome.min.css?v=4.4.0" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.0.1" rel="stylesheet" type="text/css">
+
+
+  <meta name="keywords" content="CTF,PWN,">
+
+
+
+
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=5.0.1">
+
+
+
+
+
+
+<meta name="description" content="0x00 引子今年5月份参加红帽杯比赛，线下攻防赛，因为不懂PWN类题目，被吊打。很不爽，于是从6月初开始重新学习汇编，操作系统到7月底，算告一段落。参考书上教程，从零完成一个简陋的操作系统，只有一个进程。这个过程中最大的收获是对汇编的深入理解，以及程序加载执行的过程的熟悉。这对PWN来说是非常好的基础。现在开始学习PWN类题目。先来梳理下常用的工具。网上有人介绍过，我自己从初学者的角度来看待，尽">
+<meta name="keywords" content="CTF,PWN">
+<meta property="og:type" content="article">
+<meta property="og:title" content="CTF PWN工具篇1-pwntools">
+<meta property="og:url" content="http://1codelife.com/2018/08/14/2018-8-ctf-tools/index.html">
+<meta property="og:site_name" content="1CodeLife">
+<meta property="og:description" content="0x00 引子今年5月份参加红帽杯比赛，线下攻防赛，因为不懂PWN类题目，被吊打。很不爽，于是从6月初开始重新学习汇编，操作系统到7月底，算告一段落。参考书上教程，从零完成一个简陋的操作系统，只有一个进程。这个过程中最大的收获是对汇编的深入理解，以及程序加载执行的过程的熟悉。这对PWN来说是非常好的基础。现在开始学习PWN类题目。先来梳理下常用的工具。网上有人介绍过，我自己从初学者的角度来看待，尽">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:updated_time" content="2019-03-02T14:29:14.456Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="CTF PWN工具篇1-pwntools">
+<meta name="twitter:description" content="0x00 引子今年5月份参加红帽杯比赛，线下攻防赛，因为不懂PWN类题目，被吊打。很不爽，于是从6月初开始重新学习汇编，操作系统到7月底，算告一段落。参考书上教程，从零完成一个简陋的操作系统，只有一个进程。这个过程中最大的收获是对汇编的深入理解，以及程序加载执行的过程的熟悉。这对PWN来说是非常好的基础。现在开始学习PWN类题目。先来梳理下常用的工具。网上有人介绍过，我自己从初学者的角度来看待，尽">
+
+
+
+<script type="text/javascript" id="hexo.configuration">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    scheme: 'Mist',
+    sidebar: {"position":"left","display":"post"},
+    fancybox: true,
+    motion: true,
+    duoshuo: {
+      userId: 0,
+      author: '博主'
+    }
+  };
+</script>
+
+
+
+
+  <link rel="canonical" href="http://1codelife.com/2018/08/14/2018-8-ctf-tools/">
+
+  <title> CTF PWN工具篇1-pwntools | 1CodeLife </title>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+
+
+<script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+            (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+          m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+  ga('create', 'UA-91250021-1', 'auto');
+  ga('send', 'pageview');
+</script>
+
+
+  <script type="text/javascript">
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "//hm.baidu.com/hm.js?826cac467c757190b2c8aa720a31068d";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+
+
+
+
+
+
+  
+  
+    
+  
+
+  <div class="container one-collumn sidebar-position-left page-post-detail ">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-meta ">
+  
+
+  <div class="custom-logo-site-title">
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <span class="site-title">1CodeLife</span>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+  <p class="site-subtitle"></p>
+</div>
+
+<div class="site-nav-toggle">
+  <button>
+    <span class="btn-bar"></span>
+    <span class="btn-bar"></span>
+    <span class="btn-bar"></span>
+  </button>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br>
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            归档
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                CTF PWN工具篇1-pwntools
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            <span class="post-meta-item-icon">
+              <i class="fa fa-calendar-o"></i>
+            </span>
+            <span class="post-meta-item-text">发表于</span>
+            <time itemprop="dateCreated" datetime="2018-08-14T19:00:00+08:00" content="2018-08-14">
+              2018-08-14
+            </time>
+          </span>
+
+          
+
+          
+            
+              <span class="post-comments-count">
+                &nbsp; | &nbsp;
+                <a href="/2018/08/14/2018-8-ctf-tools/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count ds-thread-count" data-thread-key="2018/08/14/2018-8-ctf-tools/" itemprop="commentsCount"></span>
+                </a>
+              </span>
+            
+          
+
+          
+
+          
+          
+
+          
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h2 id="0x00-引子"><a href="#0x00-引子" class="headerlink" title="0x00 引子"></a>0x00 引子</h2><p>今年5月份参加红帽杯比赛，线下攻防赛，因为不懂PWN类题目，被吊打。很不爽，于是从6月初开始重新学习汇编，操作系统到7月底，算告一段落。参考书上教程，从零完成一个简陋的操作系统，只有一个进程。这个过程中最大的收获是对汇编的深入理解，以及程序加载执行的过程的熟悉。这对PWN来说是非常好的基础。现在开始学习PWN类题目。先来梳理下常用的工具。网上有人介绍过，我自己从初学者的角度来看待，尽可能详尽些。<br>后续会逐个详细介绍在做PWN题中使用到的功能点。<br><a id="more"></a></p>
+<h2 id="0x01-工具"><a href="#0x01-工具" class="headerlink" title="0x01 工具"></a>0x01 工具</h2><p>古书云：人欲善其事，必先利其器。PWN类题目主要的工具有：</p>
+<ol>
+<li><a href="https://github.com/Gallopsled/pwntools" target="_blank" rel="noopener">pwntools</a>：<br>这是基于Python开发的工具库。可以很方便的进行本地调试，远程利用。在github上可以找到。</li>
+<li>gdb:调试神器</li>
+<li>peda: 基于Python开发的gdb的插件，可以方便地显示当前栈，堆等信息。</li>
+<li>IDA：反汇编逆向的神器，F5一键查看伪代码。<br>目前用到的就这么多，后面有的话，再添加。<h2 id="0x02-pwntools"><a href="#0x02-pwntools" class="headerlink" title="0x02 pwntools"></a>0x02 pwntools</h2><a href="https://github.com/Gallopsled/pwntools" target="_blank" rel="noopener">https://github.com/Gallopsled/pwntools</a>，附上项目的github地址。这种正规的项目，都有完备的使用和开发说明文档，但这些文档太全面，从实用的角度来说，只挑现在用到的功能。  <h3 id="2-1-安装"><a href="#2-1-安装" class="headerlink" title="2.1 安装"></a>2.1 安装</h3>可以方便的使用pip进行安装：<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">pip install pwntools</span><br></pre></td></tr></table></figure>
+</li>
+</ol>
+<p>这是在Ubuntu系统下。如果安装过程中遇到问题了可以参考下官方文档<a href="https://docs.pwntools.com/en/stable/" target="_blank" rel="noopener">https://docs.pwntools.com/en/stable/</a>  </p>
+<h3 id="2-2-pwntools使用的一般流程"><a href="#2-2-pwntools使用的一般流程" class="headerlink" title="2.2 pwntools使用的一般流程"></a>2.2 pwntools使用的一般流程</h3><ol>
+<li>使用process/remote建立交互</li>
+<li>通过调试，泄露堆栈信息找到利用点。</li>
+<li>构造Payload利用</li>
+<li>开启交互式shell，完成利用。<br>下面的介绍也是按照这样一个顺序进行。  <h3 id="2-3-process-remote模块"><a href="#2-3-process-remote模块" class="headerlink" title="2.3 process/remote模块"></a>2.3 process/remote模块</h3>PWN题一开始就要建立与可执行程序的交互。这就是通过这两个模块实现的。如果是本地调试的话，就使用process模块，本地调试好了就是远程利用拿FLAG了，用的是remote模块。<br>一般使用pwntools的脚本和可执行文件放在同一目录，方便管理。使用process的过程为：<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"># 引入模块</span><br><span class="line">from pwn import process</span><br><span class="line"># 生成实例</span><br><span class="line">p = process(&apos;./pwn&apos;)</span><br><span class="line"></span><br><span class="line"># 向进程发信息, 模拟用户的输入，在输入后添加回车，传递给进程。</span><br><span class="line">p.sendline(&apos;some thing&apos;)</span><br><span class="line"></span><br><span class="line"># 接收进程输出信息</span><br><span class="line"># 交互时，要确定进程的状态，通过recvuntil，确保程序是运行在期望的状态下，</span><br><span class="line"># 可以保证Payload是在合适的时机发送的。</span><br><span class="line">p.recvuntil(&apos;some thing&apos;)</span><br><span class="line"></span><br><span class="line"># 开启交互shell</span><br><span class="line"># 这个时候要确认进程已已经成功get shell了，这个函数能开启一个shell。如果</span><br><span class="line"># Payload 有异常这时脚本会异常中止。</span><br><span class="line">p.interactive()</span><br></pre></td></tr></table></figure>
+</li>
+</ol>
+<h3 id="2-4-ELF模块"><a href="#2-4-ELF模块" class="headerlink" title="2.4 ELF模块"></a>2.4 ELF模块</h3><p>大多数CTF比赛中的PWN题是基于Linux下可执行文件的。而Linux下可执行文件的格式为ELF。有时候我们需要从可执行文件中提取出一些有用信息，如函数的相对偏移地址，函数在GOT，PLT表的位置等，包括libc中一个信息。<br>这里再说一下自己对程序和进程的差别的理解。<br>也就是说进程不是简单地把程序拷贝到内存就可以执行了。这当中有许多历史和技术原因。程序是编译好的可执行文件，存在于磁盘上的。它的内容是按段组织的。可以使用objdump -x pwn2来查看。可以看到文件分成好多段，粘过来的格式乱掉了。<br>一般基本的有：   </p>
+<ul>
+<li>.text: 代码段</li>
+<li>.data: 数据段<br>当然用C语言编写得到的可执行程序的段不会只有这2个。如果是汇编的话，就能做到只有这两个段。这里的.text段放的就是程序要执行的代码，是编译好的机器语言。.data段放的是变量，全局变量。因为局部变量是在栈上分配的。除了这两个，还一个header段，是用来说明这个程序的文件格式。<br>需要动态链接的程序还会有以下段：</li>
+<li>.plt: procedure link table, 过程链接表</li>
+<li>.got： global offset table，全局偏移表。<br>当然这两个段跟PWN题强相关的。这两个段用于在加载时，重定位库函数的偏移地址的。可参考这篇文章<a href="https://blog.csdn.net/linyt/article/details/51635768" target="_blank" rel="noopener">聊聊Linux动态链接中的PLT和GOT（１）——何谓PLT与GOT</a></li>
+</ul>
+<p>通过ELF加载了可执行文件，就可以方便地读取一些信息了。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">elf = ELF(&apos;./pwn&apos;)</span><br><span class="line"># symbols里包含了变量，函数的地址。如果没有开启地址随机化的话，读到的地址，就是其实际加载的地址。</span><br><span class="line">elf.symbols[&apos;system&apos;]</span><br><span class="line"># 也可以读bss段的地址</span><br><span class="line">elf.bss()</span><br></pre></td></tr></table></figure></p>
+<h3 id="2-5-一些通用的模块"><a href="#2-5-一些通用的模块" class="headerlink" title="2.5 一些通用的模块"></a>2.5 一些通用的模块</h3><p>这些模块用来处理一些细节<br>如大小端字节的处理。这两个模块在由泄露信息生成payload时很好用，不需要再手动将32位数值转化为小端4字节二进制数，同时也方便将人可读的信息转化为机器可识别信息。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"># 将32位数值转化为小当前计算机上的表示，x86就是小端得到的是/x78/x56/x34/x12</span><br><span class="line">p32(0x12345678)</span><br><span class="line"></span><br><span class="line"># 将32位地址转化为32位int</span><br><span class="line">u32(&apos;\x78\x56\x32\x12&apos;)</span><br></pre></td></tr></table></figure></p>
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/CTF/" rel="tag">#CTF</a>
+          
+            <a href="/tags/PWN/" rel="tag">#PWN</a>
+          
+        </div>
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2018/08/10/2018-8-os1/" rel="next" title="写个小操作系统1">
+                <i class="fa fa-chevron-left"></i> 写个小操作系统1
+              </a>
+            
+          </div>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2018/08/16/2018-8-wp1/" rel="prev" title="hackme.inndy.tw toooomuch2 writeup">
+                hackme.inndy.tw toooomuch2 writeup <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+  <div class="comments" id="comments">
+    
+      <div class="ds-thread" data-thread-key="2018/08/14/2018-8-ctf-tools/" data-title="CTF PWN工具篇1-pwntools" data-url="http://1codelife.com/2018/08/14/2018-8-ctf-tools/">
+      </div>
+    
+  </div>
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview sidebar-panel ">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+          <img class="site-author-image" itemprop="image" src="https://octodex.github.com/images/skitchtocat.png" alt="Quay & LinLin">
+          <p class="site-author-name" itemprop="name">Quay & LinLin</p>
+          <p class="site-description motion-element" itemprop="description"></p>
+        </div>
+        <nav class="site-state motion-element">
+          <div class="site-state-item site-state-posts">
+            <a href="/archives">
+              <span class="site-state-item-count">24</span>
+              <span class="site-state-item-name">日志</span>
+            </a>
+          </div>
+
+          
+            <div class="site-state-item site-state-categories">
+              <a href="/categories">
+                <span class="site-state-item-count">14</span>
+                <span class="site-state-item-name">分类</span>
+              </a>
+            </div>
+          
+
+          
+            <div class="site-state-item site-state-tags">
+              
+                <span class="site-state-item-count">38</span>
+                <span class="site-state-item-name">标签</span>
+              
+            </div>
+          
+
+        </nav>
+
+        
+
+        <div class="links-of-author motion-element">
+          
+        </div>
+
+        
+        
+
+        
+        
+
+      </section>
+
+      
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+            
+              
+            
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#0x00-引子"><span class="nav-number">1.</span> <span class="nav-text">0x00 引子</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#0x01-工具"><span class="nav-number">2.</span> <span class="nav-text">0x01 工具</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#0x02-pwntools"><span class="nav-number">3.</span> <span class="nav-text">0x02 pwntools</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#2-1-安装"><span class="nav-number">3.1.</span> <span class="nav-text">2.1 安装</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-2-pwntools使用的一般流程"><span class="nav-number">3.2.</span> <span class="nav-text">2.2 pwntools使用的一般流程</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-3-process-remote模块"><span class="nav-number">3.3.</span> <span class="nav-text">2.3 process/remote模块</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-4-ELF模块"><span class="nav-number">3.4.</span> <span class="nav-text">2.4 ELF模块</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-5-一些通用的模块"><span class="nav-number">3.5.</span> <span class="nav-text">2.5 一些通用的模块</span></a></li></ol></li></ol></div>
+            
+          </div>
+        </section>
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2019</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Quay & LinLin</span>
+</div>
+
+<div class="powered-by">
+  由 <a class="theme-link" href="http://hexo.io">Hexo</a> 强力驱动
+</div>
+
+<div class="theme-info">
+  主题 -
+  <a class="theme-link" href="https://github.com/iissnan/hexo-theme-next">
+    NexT.Mist
+  </a>
+</div>
+
+        
+
+        
+      </div>
+    </footer>
+
+    <div class="back-to-top">
+      <i class="fa fa-arrow-up"></i>
+    </div>
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+  
+  <script type="text/javascript" src="/vendors/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script type="text/javascript" src="/vendors/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  
+  <script type="text/javascript" src="/vendors/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  <script type="text/javascript" src="/vendors/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/vendors/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/vendors/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.0.1"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.0.1"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.0.1"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.0.1"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.0.1"></script>
+
+
+
+  
+
+  
+    
+  
+
+  <script type="text/javascript">
+    var duoshuoQuery = {short_name:"quay"};
+    (function() {
+      var ds = document.createElement('script');
+      ds.type = 'text/javascript';ds.async = true;
+      ds.id = 'duoshuo-script';
+      ds.src = (document.location.protocol == 'https:' ? 'https:' : 'http:') + '//static.duoshuo.com/embed.js';
+      ds.charset = 'UTF-8';
+      (document.getElementsByTagName('head')[0]
+      || document.getElementsByTagName('body')[0]).appendChild(ds);
+    })();
+  </script>
+
+  
+    
+    <script src="/vendors/ua-parser-js/dist/ua-parser.min.js?v=0.7.9"></script>
+    <script src="/js/src/hook-duoshuo.js"></script>
+  
+
+
+
+
+
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

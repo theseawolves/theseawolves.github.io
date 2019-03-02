@@ -1,0 +1,697 @@
+<!doctype html>
+
+
+
+  
+
+
+<html class="theme-next mist use-motion">
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/vendors/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+  
+  
+  
+  
+
+  
+    
+    
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    
+    
+    <link href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&subset=latin,latin-ext" rel="stylesheet" type="text/css">
+  
+
+
+
+
+
+
+<link href="/vendors/font-awesome/css/font-awesome.min.css?v=4.4.0" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.0.1" rel="stylesheet" type="text/css">
+
+
+  <meta name="keywords" content="翻译,类,">
+
+
+
+
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=5.0.1">
+
+
+
+
+
+
+<meta name="description" content="最近在学习“You-Dont-Know-JS”，读到本章：Mixing (Up) “Class” Objects，作者把经典类理论讲得非常透彻，所以翻译出来，我们一起来重温经典的“面向对象编程”理论。此文为上半部分。原文链接：https://github.com/getify/You-Dont-Know-JS/blob/master/this%20%26%20object%20prototypes">
+<meta name="keywords" content="翻译,类">
+<meta property="og:type" content="article">
+<meta property="og:title" content="混合“类”对象（上）">
+<meta property="og:url" content="http://1codelife.com/2017/11/30/mixing-up-class-objects-1/index.html">
+<meta property="og:site_name" content="1CodeLife">
+<meta property="og:description" content="最近在学习“You-Dont-Know-JS”，读到本章：Mixing (Up) “Class” Objects，作者把经典类理论讲得非常透彻，所以翻译出来，我们一起来重温经典的“面向对象编程”理论。此文为上半部分。原文链接：https://github.com/getify/You-Dont-Know-JS/blob/master/this%20%26%20object%20prototypes">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:image" content="http://1codelife.com/images/class-copy-operation.png">
+<meta property="og:updated_time" content="2019-03-02T14:29:14.456Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="混合“类”对象（上）">
+<meta name="twitter:description" content="最近在学习“You-Dont-Know-JS”，读到本章：Mixing (Up) “Class” Objects，作者把经典类理论讲得非常透彻，所以翻译出来，我们一起来重温经典的“面向对象编程”理论。此文为上半部分。原文链接：https://github.com/getify/You-Dont-Know-JS/blob/master/this%20%26%20object%20prototypes">
+<meta name="twitter:image" content="http://1codelife.com/images/class-copy-operation.png">
+
+
+
+<script type="text/javascript" id="hexo.configuration">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    scheme: 'Mist',
+    sidebar: {"position":"left","display":"post"},
+    fancybox: true,
+    motion: true,
+    duoshuo: {
+      userId: 0,
+      author: '博主'
+    }
+  };
+</script>
+
+
+
+
+  <link rel="canonical" href="http://1codelife.com/2017/11/30/mixing-up-class-objects-1/">
+
+  <title> 混合“类”对象（上） | 1CodeLife </title>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+
+
+<script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+            (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+          m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+  ga('create', 'UA-91250021-1', 'auto');
+  ga('send', 'pageview');
+</script>
+
+
+  <script type="text/javascript">
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "//hm.baidu.com/hm.js?826cac467c757190b2c8aa720a31068d";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+
+
+
+
+
+
+  
+  
+    
+  
+
+  <div class="container one-collumn sidebar-position-left page-post-detail ">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-meta ">
+  
+
+  <div class="custom-logo-site-title">
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <span class="site-title">1CodeLife</span>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+  <p class="site-subtitle"></p>
+</div>
+
+<div class="site-nav-toggle">
+  <button>
+    <span class="btn-bar"></span>
+    <span class="btn-bar"></span>
+    <span class="btn-bar"></span>
+  </button>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br>
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            归档
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                混合“类”对象（上）
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            <span class="post-meta-item-icon">
+              <i class="fa fa-calendar-o"></i>
+            </span>
+            <span class="post-meta-item-text">发表于</span>
+            <time itemprop="dateCreated" datetime="2017-11-30T23:15:42+08:00" content="2017-11-30">
+              2017-11-30
+            </time>
+          </span>
+
+          
+            <span class="post-category">
+              &nbsp; | &nbsp;
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+              
+                <span itemprop="about" itemscope itemtype="https://schema.org/Thing">
+                  <a href="/categories/类/" itemprop="url" rel="index">
+                    <span itemprop="name">类</span>
+                  </a>
+                </span>
+
+                
+                
+                  ， 
+                
+
+              
+                <span itemprop="about" itemscope itemtype="https://schema.org/Thing">
+                  <a href="/categories/类/翻译/" itemprop="url" rel="index">
+                    <span itemprop="name">翻译</span>
+                  </a>
+                </span>
+
+                
+                
+
+              
+            </span>
+          
+
+          
+            
+              <span class="post-comments-count">
+                &nbsp; | &nbsp;
+                <a href="/2017/11/30/mixing-up-class-objects-1/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count ds-thread-count" data-thread-key="2017/11/30/mixing-up-class-objects-1/" itemprop="commentsCount"></span>
+                </a>
+              </span>
+            
+          
+
+          
+
+          
+          
+
+          
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p>最近在学习“You-Dont-Know-JS”，读到本章：Mixing (Up) “Class” Objects，作者把经典类理论讲得非常透彻，所以翻译出来，我们一起来重温经典的“面向对象编程”理论。此文为上半部分。<br>原文链接：<a href="https://github.com/getify/You-Dont-Know-JS/blob/master/this%20%26%20object%20prototypes/ch4.md" target="_blank" rel="noopener">https://github.com/getify/You-Dont-Know-JS/blob/master/this%20%26%20object%20prototypes/ch4.md</a></p>
+<a id="more"></a>
+<p>继上一章的对象之后，我们现在把注意力转向“面向对象（OO）编程”和“类”是很自然的。在研究“实例化”，“继承”和“（相对）多态性”等“类”的机制之前，我们首先将“类定向”作为一种设计模式。</p>
+<p>我们将会看到，这些概念并没有真正地将自然映射到JS中的对象机制，而是许多JavaScript开发人员用来克服这些挑战的长度（mixins等）。</p>
+<p>注意：本章花费了相当长一段时间（上半部分！）来重温经典的“面向对象编程”理论。当我们谈论“Mixins”时，我们最终将这些想法与下半部分真实的具体JavaScript代码联系起来。但是有很多概念和伪代码需要先过，所以不要迷茫 - 只要坚持看下去！</p>
+<h1 id="类理论"><a href="#类理论" class="headerlink" title="类理论"></a>类理论</h1><p>“类/继承”描述了某种形式的代码组织和体系结构 - 在我们的软件中建模真实世界问题域的一种方式。</p>
+<p>OO或面向类的编程强调数据本质上具有相关联的行为（当然，取决于数据的类型和性质，它们是不同的），所以正确的设计是将数据和行为打包（也就是封装）一起。这在正式的计算机科学中有时被称为“数据结构”。</p>
+<p>例如，表示单词或短语的一系列字符通常称为“字符串”。这些字符是数据。但是你几乎从不关心数据，你通常想要用数据做事，所以可以应用到数据上的行为（计算它的长度，附加数据，搜索等）都被设计成一个String类的方法。</p>
+<p>任何给定的字符串只是这个类的一个实例，这意味着它（String类）是一个整齐收集的字符数据和我们可以执行的功能的包装。</p>
+<p>类也意味着对某个数据结构进行分类的方法。我们这样做的方式是将任何给定的结构视为更一般的基本定义的特定变体。</p>
+<p>我们来看一个通常引用的例子来探讨这个分类过程。一辆汽车（car）可以被描述为一个更通用的“类”的东西，被称为车辆（vehicle）的具体实现。</p>
+<p>我们通过定义一个Vehicle类和一个Car类来对这个关系进行建模。</p>
+<p>Vehicle可能的定义包括推进（引擎等），携带人的能力等等，这些都是行为。我们所定义的Vehicle是所有（或大部分）不同类型的车辆（“飞机，火车和汽车”）所共有的所有东西。</p>
+<p>在我们的软件中重新定义每种不同类型的车辆的“携带人”这种车辆基本本质能力可能是没有意义的。相反，我们在Vehicle中定义一次这个能力，然后当我们定义Car的时候，我们只是简单地指出它从基础定义Vehicle“继承”（或“扩展”）。该Car定义被认为是专门的一般Vehicle定义。</p>
+<p>虽然Vehicle和Car是通过类方法方式一起定义其行为，但是在某一个实例中的数据就像特定汽车的车牌号码一样独特。<br>因此，类，继承和实例化出现。</p>
+<p>类的另一个关键概念是“多态性”，它描述了这样一种观点，即父类中的一般行为可以在子类中被覆盖以给出更具体的内容。事实上，相对多态性可以让我们从被覆盖的行为中引用基本行为。</p>
+<p>类理论强烈建议，父类和子类共享一个特定的行为相同的方法名称，以便孩子覆盖父（差异）。正如我们稍后会看到的那样，在JavaScript代码中这样做会让人感到沮丧和代码脆弱。</p>
+<h2 id="“类”设计模式"><a href="#“类”设计模式" class="headerlink" title="“类”设计模式"></a>“类”设计模式</h2><p>你可能从来没有想过类作为“设计模式”，因为最常见的是讨论流行的“OO设计模式”，如“迭代器”，“观察者”，“工厂”，“单例”等。这样，几乎可以假定OO类是实现所有（更高级别）设计模式的底层机制，就像OO是所有（适当）代码的给定基础一样。</p>
+<p>根据程序设计的正规教育程度，你可能听说过“ 过程式编程”是一种描述只包含调用其他函数的程序（又称函数）的代码，没有任何更高的抽象。你可能已经被教导说，类是将过程式的“意大利面代码”转换成格式良好，组织良好的代码的正确方法。</p>
+<p>当然，如果你有“函数式编程”（Monads等）的经验，那么你就很清楚，类只是几种常见设计模式之一。但是对于其他人来说，这可能是你第一次问自己类是否真的是代码的基础，或者是代码的可选抽象。</p>
+<p>有些语言（如Java）不会给你选择，所以它根本不是可选项 - 一切都是一个类。像C / C ++或PHP这样的其他语言可以为你提供面向过程和面向类的语法，而开发者可以选择哪种风格或风格混合。</p>
+<h2 id="JavaScript“类”"><a href="#JavaScript“类”" class="headerlink" title="JavaScript“类”"></a>JavaScript“类”</h2><p>JavaScript在这方面落在哪里？JS已经有了一些像类和类似的语法元素（比如new和instanceof），而在最近的ES6中，有一些增加了，比如class关键字（见附录A）。</p>
+<p>但这是否意味着JavaScript实际上有类？当然：没有。</p>
+<p>因为类是一种设计模式，所以你可以付出相当大的努力（正如我们将在本章其余部分中看到的那样），为大多数古典类的功能实现近似。JS试图通过提供看起来像类的语法来满足设计类的极其普遍的愿望。</p>
+<p>虽然我们可能有一个看起来像类的语法，就好像JavaScript机制正在使用类设计模式对抗你一样，因为在幕后，你构建的机制运行的方式是完全不同的。语法糖及（极广泛使用）JS“类”库去对你隐藏了这个现实很长的路要走，但迟早你将面对一个事实，即你在其他语言中使用的类不像你在JS重新伪造的“类”。</p>
+<p>这可归结为类是软件设计中的可选模式，并且您可以选择是否使用它们。由于许多开发人员对于面向类的软件设计有很强的吸引力，因此我们将在本章的其余部分中探索为了维持使用JS提供的类的错觉需要付出的代价，以及我们遇到的痛点。</p>
+<h1 id="类特性"><a href="#类特性" class="headerlink" title="类特性"></a>类特性</h1><p>在许多面向类的语言中，“标准库”提供了一个“栈”数据结构（push，pop等）作为一个Stack类。这个类将有一个内部的一组变量来存储数据，它将有一个由类提供的一组可公开访问的行为（“方法”），使您的代码能够与（隐藏的）数据交互（增加数据、删除数据等）。</p>
+<p>但是在这样的语言中，你并不真正直接操作Stack（除非提供一个静态类成员引用，这不在我们讨论的范围之内）。该Stack类仅仅是任何堆栈“stack”抽象解释，但它本身不是一个 “堆栈”。在你有一个具体的数据结构需要操作之前，你必须实例化Stack类。</p>
+<h2 id="构建"><a href="#构建" class="headerlink" title="构建"></a>构建</h2><p>传统的“类”和“实例”思维的比喻来自于建筑的建设。</p>
+<p>建筑师计划建筑物的所有特征：多大，多高，多少个窗户以及哪些位置，甚至哪些类型的材料用于墙壁和屋顶。她不一定在意，在这一点上，哪里的建筑将建成，她也不关心有多少建筑副本将建成。</p>
+<p>她也不太关心建筑物的内容 - 家具，墙纸，吊扇等 - 只关心它们将包含什么类型的结构。</p>
+<p>她生产的建筑蓝图只是建筑的平面图。他们实际上并不构成我们可以走进去坐下的建筑。我们需要一个建设者来完成这个任务。当建造建筑物时，建筑商会拿这些计划，并且会严格地遵照它们建造。从一个非常真实的意义上说，他正在将计划中的预期特征复制到实体建筑中。</p>
+<p>一旦完成，建筑物就是蓝图计划的物理实例，希望是一个完美的副本。然后，建筑商可以搬到隔壁的空地上，重新做一遍，创造另一个副本。</p>
+<p>建筑和蓝图之间的关系是间接的。您可以查看蓝图，以了解建筑物的结构，对于直接检查建筑物的任何部分都是不够的。但是，如果你想打开一扇门，你必须自己去建筑物处 - 蓝图只在页面上画线，代表门应该在那里。</p>
+<p>类就是一个蓝图。为了实际得到一个可以与之交互的对象，我们必须从类中构建（也就是“实例化”）一些东西。这种“构造”的最终结果是一个通常称为“实例”的对象，我们可以根据需要直接调用方法并访问任何公共数据属性。</p>
+<p>这个对象是这个类描述的所有特征的一个副本。</p>
+<p>你可能不会期望走进一幢建筑物，在墙上找到一个用于规划建筑物的蓝图副本，尽管蓝图可能在公共档案室存档。同样，你通常不使用一个对象实例来直接访问和操作它的类，但通常至少可以确定一个对象实例来自哪个类。</p>
+<p>考虑一个类与一个对象实例的直接关系更有用，而不是对象实例和它所来自的类之间的任何间接关系。一个类通过复制操作实例化为对象形式。</p>
+<p><img src="/images/class-copy-operation.png" alt="类与对象"></p>
+<p>正如你所看到的，箭头从左到右，从上到下移动，这表示在概念上和物理上发生的复制操作。</p>
+<h2 id="构造函数"><a href="#构造函数" class="headerlink" title="构造函数"></a>构造函数</h2><p>类的实例由类的特殊方法构造，通常与类的名称相同，称为构造函数。这个方法的显式工作是初始化实例需要的任何信息（状态）。<br>例如，考虑这个松散的伪代码（我发明的语法）的类：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">class CoolGuy &#123;</span><br><span class="line">	specialTrick = nothing</span><br><span class="line"></span><br><span class="line">	CoolGuy( trick ) &#123;</span><br><span class="line">		specialTrick = trick</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	showOff() &#123;</span><br><span class="line">		output( &quot;Here&apos;s my trick: &quot;, specialTrick )</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>为了创建一个CoolGuy实例，我们将调用类的构造函数：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">Joe = new CoolGuy( &quot;jumping rope&quot; )</span><br><span class="line">Joe.showOff() // Here&apos;s my trick: jumping rope</span><br></pre></td></tr></table></figure>
+<p>注意到这个CoolGuy类有一个构造函数CoolGuy()，实际上我们说的是我们所说的new CoolGuy(..)。我们从构造函数中得到一个对象（我们类的一个实例），我们可以调用这个方法showOff()，打印出特殊CoolGuy的特殊技巧。</p>
+<p>显然，跳绳让乔成为一个很酷的家伙。</p>
+<p>一个类的构造函数属于这个类，几乎普遍地与这个类同名。另外，几乎总是需要用new来调用构造函数，让语言引擎知道你想要构造一个新的类实例。</p>
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/翻译/" rel="tag">#翻译</a>
+          
+            <a href="/tags/类/" rel="tag">#类</a>
+          
+        </div>
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2017/11/30/paramiko-larger-file-update/" rel="next" title="Paramiko模块大文件上传慢解决方法">
+                <i class="fa fa-chevron-left"></i> Paramiko模块大文件上传慢解决方法
+              </a>
+            
+          </div>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2017/12/13/phantomjs-sso-login/" rel="prev" title="PhantomJS SSO单点登录，加Cookie异常情况处理">
+                PhantomJS SSO单点登录，加Cookie异常情况处理 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+  <div class="comments" id="comments">
+    
+      <div class="ds-thread" data-thread-key="2017/11/30/mixing-up-class-objects-1/" data-title="混合“类”对象（上）" data-url="http://1codelife.com/2017/11/30/mixing-up-class-objects-1/">
+      </div>
+    
+  </div>
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview sidebar-panel ">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+          <img class="site-author-image" itemprop="image" src="https://octodex.github.com/images/skitchtocat.png" alt="Quay & LinLin">
+          <p class="site-author-name" itemprop="name">Quay & LinLin</p>
+          <p class="site-description motion-element" itemprop="description"></p>
+        </div>
+        <nav class="site-state motion-element">
+          <div class="site-state-item site-state-posts">
+            <a href="/archives">
+              <span class="site-state-item-count">24</span>
+              <span class="site-state-item-name">日志</span>
+            </a>
+          </div>
+
+          
+            <div class="site-state-item site-state-categories">
+              <a href="/categories">
+                <span class="site-state-item-count">14</span>
+                <span class="site-state-item-name">分类</span>
+              </a>
+            </div>
+          
+
+          
+            <div class="site-state-item site-state-tags">
+              
+                <span class="site-state-item-count">38</span>
+                <span class="site-state-item-name">标签</span>
+              
+            </div>
+          
+
+        </nav>
+
+        
+
+        <div class="links-of-author motion-element">
+          
+        </div>
+
+        
+        
+
+        
+        
+
+      </section>
+
+      
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+            
+              
+            
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#类理论"><span class="nav-number">1.</span> <span class="nav-text">类理论</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#“类”设计模式"><span class="nav-number">1.1.</span> <span class="nav-text">“类”设计模式</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#JavaScript“类”"><span class="nav-number">1.2.</span> <span class="nav-text">JavaScript“类”</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#类特性"><span class="nav-number">2.</span> <span class="nav-text">类特性</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#构建"><span class="nav-number">2.1.</span> <span class="nav-text">构建</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#构造函数"><span class="nav-number">2.2.</span> <span class="nav-text">构造函数</span></a></li></ol></li></ol></div>
+            
+          </div>
+        </section>
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2019</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Quay & LinLin</span>
+</div>
+
+<div class="powered-by">
+  由 <a class="theme-link" href="http://hexo.io">Hexo</a> 强力驱动
+</div>
+
+<div class="theme-info">
+  主题 -
+  <a class="theme-link" href="https://github.com/iissnan/hexo-theme-next">
+    NexT.Mist
+  </a>
+</div>
+
+        
+
+        
+      </div>
+    </footer>
+
+    <div class="back-to-top">
+      <i class="fa fa-arrow-up"></i>
+    </div>
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+  
+  <script type="text/javascript" src="/vendors/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script type="text/javascript" src="/vendors/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  
+  <script type="text/javascript" src="/vendors/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  <script type="text/javascript" src="/vendors/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/vendors/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/vendors/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.0.1"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.0.1"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.0.1"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.0.1"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.0.1"></script>
+
+
+
+  
+
+  
+    
+  
+
+  <script type="text/javascript">
+    var duoshuoQuery = {short_name:"quay"};
+    (function() {
+      var ds = document.createElement('script');
+      ds.type = 'text/javascript';ds.async = true;
+      ds.id = 'duoshuo-script';
+      ds.src = (document.location.protocol == 'https:' ? 'https:' : 'http:') + '//static.duoshuo.com/embed.js';
+      ds.charset = 'UTF-8';
+      (document.getElementsByTagName('head')[0]
+      || document.getElementsByTagName('body')[0]).appendChild(ds);
+    })();
+  </script>
+
+  
+    
+    <script src="/vendors/ua-parser-js/dist/ua-parser.min.js?v=0.7.9"></script>
+    <script src="/js/src/hook-duoshuo.js"></script>
+  
+
+
+
+
+
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

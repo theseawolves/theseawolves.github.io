@@ -1,0 +1,629 @@
+<!doctype html>
+
+
+
+  
+
+
+<html class="theme-next mist use-motion">
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/vendors/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+  
+  
+  
+  
+
+  
+    
+    
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    
+    
+    <link href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&subset=latin,latin-ext" rel="stylesheet" type="text/css">
+  
+
+
+
+
+
+
+<link href="/vendors/font-awesome/css/font-awesome.min.css?v=4.4.0" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.0.1" rel="stylesheet" type="text/css">
+
+
+  <meta name="keywords" content="Linux,">
+
+
+
+
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=5.0.1">
+
+
+
+
+
+
+<meta name="description" content="介绍xargs是bash中的一个命令，用于命令行中参数的传递和处理。可用来将特定的参数传递给另外一个命令。另外一个命令作为xargs的参数传递进来。在shell里面，通过man xargs查看其使用说明。这里只给出了前面的部分。">
+<meta name="keywords" content="Linux">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Linux命令-xargs">
+<meta property="og:url" content="http://1codelife.com/2017/07/24/bash-xargs/index.html">
+<meta property="og:site_name" content="1CodeLife">
+<meta property="og:description" content="介绍xargs是bash中的一个命令，用于命令行中参数的传递和处理。可用来将特定的参数传递给另外一个命令。另外一个命令作为xargs的参数传递进来。在shell里面，通过man xargs查看其使用说明。这里只给出了前面的部分。">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:updated_time" content="2019-03-02T14:29:14.456Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Linux命令-xargs">
+<meta name="twitter:description" content="介绍xargs是bash中的一个命令，用于命令行中参数的传递和处理。可用来将特定的参数传递给另外一个命令。另外一个命令作为xargs的参数传递进来。在shell里面，通过man xargs查看其使用说明。这里只给出了前面的部分。">
+
+
+
+<script type="text/javascript" id="hexo.configuration">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    scheme: 'Mist',
+    sidebar: {"position":"left","display":"post"},
+    fancybox: true,
+    motion: true,
+    duoshuo: {
+      userId: 0,
+      author: '博主'
+    }
+  };
+</script>
+
+
+
+
+  <link rel="canonical" href="http://1codelife.com/2017/07/24/bash-xargs/">
+
+  <title> Linux命令-xargs | 1CodeLife </title>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+
+
+<script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+            (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+          m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+  ga('create', 'UA-91250021-1', 'auto');
+  ga('send', 'pageview');
+</script>
+
+
+  <script type="text/javascript">
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "//hm.baidu.com/hm.js?826cac467c757190b2c8aa720a31068d";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+
+
+
+
+
+
+  
+  
+    
+  
+
+  <div class="container one-collumn sidebar-position-left page-post-detail ">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-meta ">
+  
+
+  <div class="custom-logo-site-title">
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <span class="site-title">1CodeLife</span>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+  <p class="site-subtitle"></p>
+</div>
+
+<div class="site-nav-toggle">
+  <button>
+    <span class="btn-bar"></span>
+    <span class="btn-bar"></span>
+    <span class="btn-bar"></span>
+  </button>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br>
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            归档
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                Linux命令-xargs
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            <span class="post-meta-item-icon">
+              <i class="fa fa-calendar-o"></i>
+            </span>
+            <span class="post-meta-item-text">发表于</span>
+            <time itemprop="dateCreated" datetime="2017-07-24T20:30:00+08:00" content="2017-07-24">
+              2017-07-24
+            </time>
+          </span>
+
+          
+
+          
+            
+              <span class="post-comments-count">
+                &nbsp; | &nbsp;
+                <a href="/2017/07/24/bash-xargs/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count ds-thread-count" data-thread-key="2017/07/24/bash-xargs/" itemprop="commentsCount"></span>
+                </a>
+              </span>
+            
+          
+
+          
+
+          
+          
+
+          
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h2 id="介绍"><a href="#介绍" class="headerlink" title="介绍"></a>介绍</h2><p>xargs是bash中的一个命令，用于命令行中参数的传递和处理。可用来将特定的参数传递给另外一个命令。另外一个命令作为xargs的参数传递进来。<br>在shell里面，通过man xargs查看其使用说明。这里只给出了前面的部分。<br><a id="more"></a><br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line">NAME</span><br><span class="line">       xargs - build and execute command lines from standard input</span><br><span class="line"></span><br><span class="line">SYNOPSIS</span><br><span class="line">       xargs  [-0prtx]  [-E  eof-str]  [-e[eof-str]]  [--eof[=eof-str]]  [--null]  [-d  delimiter] [--delimiter delimiter] [-I replace-str] [-i[replace-str]] [--replace[=replace-str]]</span><br><span class="line">       [-l[max-lines]] [-L max-lines] [--max-lines[=max-lines]] [-n max-args] [--max-args=max-args]  [-s  max-chars]  [--max-chars=max-chars]  [-P  max-procs]  [--max-procs=max-procs]</span><br><span class="line">       [--interactive] [--verbose] [--exit] [--no-run-if-empty] [--arg-file=file] [--show-limits] [--version] [--help] [command [initial-arguments]]</span><br><span class="line"></span><br><span class="line">DESCRIPTION</span><br><span class="line">       This  manual  page documents the GNU version of xargs.  xargs reads items from the standard input, delimited by blanks (which can be protected with double or single quotes or a</span><br><span class="line">       backslash) or newlines, and executes the command (default is /bin/echo) one or more times with any initial-arguments followed by items read from standard input.  Blank lines on</span><br><span class="line">       the standard input are ignored.</span><br><span class="line"></span><br><span class="line">       Because  Unix  filenames  can contain blanks and newlines, this default behaviour is often problematic; filenames containing blanks and/or newlines are incorrectly processed by</span><br><span class="line">       xargs.  In these situations it is better to use the -0 option, which prevents such problems.   When using this option you will need to ensure that the  program  which  produces</span><br><span class="line">       the input for xargs also uses a null character as a separator.  If that program is GNU find for example, the -print0 option does this for you.</span><br><span class="line"></span><br><span class="line">       If any invocation of the command exits with a status of 255, xargs will stop immediately without reading any further input.  An error message is issued on stderr when this hap-</span><br><span class="line">       pens.</span><br></pre></td></tr></table></figure></p>
+<h2 id="manual格式说明"><a href="#manual格式说明" class="headerlink" title="manual格式说明"></a>manual格式说明</h2><p>这里简要说明下manual的格式。SYNOPSIS是语法的意思，其下面的3行文字是用来说明如何使用这个命令。其中大部分的内容是说明这个命令的选项的。一个工具通常有很多种不同的用法，我们不想开发出一款工具却只能有一种用途，bash里面命令的灵活多变性，是通过选项(options)来实现控制的。对于使用shell的人员来说，manul是一个强大的工具，manual后面是各个选项的功能介绍和使用实例。简单来说有如下的规则：</p>
+<ul>
+<li>如果是”-“来表示选项的话，那么它后面跟着的是一个字母代表的选项。如果是”–”两个话，后面跟一个单词作为选项。</li>
+<li>用[]包围起来的内容表示一个语法单元，多是选项单元。选项单元由选项名和参数组成，中间用空格分割。1) 如果选项名后面没有参数，则说明这个选项后是不传递参数的。形如[-Oprtx]；2) 同时，如果”-“后有多个选项，则说明这个命令具有多个不带参数选项。3)如果参数用[]包围起来，则说明这个选项可以传递参数，也可以不传递。如[command [initial-arguments]]，其中的initial-arguments作为command的参数，可以有也可以没有。</li>
+<li>有些选项和参数之间没有空格，需要注意。如[-I replace-str] [-i[replace-str]] ，同样的功能使用-i时，选项与参数之间没有空格。</li>
+</ul>
+<h2 id="xargs使用实例"><a href="#xargs使用实例" class="headerlink" title="xargs使用实例"></a>xargs使用实例</h2><ul>
+<li>删除指定的文件<br>假如一个文件夹下有很多个子文件夹，这些文件件中都包含有*.log日志文件，你想要删除这些日志文件。<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line">ulin@lin-pc:/mnt/d/program1/bash$ find</span><br><span class="line">.</span><br><span class="line">./1</span><br><span class="line">./1/1</span><br><span class="line">./1/1.log</span><br><span class="line">./1/2</span><br><span class="line">./1/2.log</span><br><span class="line">./1/3</span><br><span class="line">./1/33</span><br><span class="line">./1/33/aa.log</span><br><span class="line">./1/4</span><br><span class="line">./1/aalog</span><br><span class="line">./2</span><br><span class="line">./2/b.log</span><br><span class="line">./example_3-3-1.sh</span><br><span class="line">./example_3-3.sh</span><br><span class="line">./ex_8-1.sh</span><br><span class="line">./scope.sh</span><br></pre></td></tr></table></figure>
+</li>
+</ul>
+<p>我们可以通过find和grep工具把这些log文件的具体路径都找到：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">ulin@lin-pc:/mnt/d/program1/bash$ find | grep &quot;\.log$&quot;</span><br><span class="line">./1/1.log</span><br><span class="line">./1/2.log</span><br><span class="line">./1/33/aa.log</span><br><span class="line">./2/b.log</span><br></pre></td></tr></table></figure></p>
+<p>如果没有xargs命令的话，我们需要写一个shell脚本，来获取这些日志的路径后，用一个for循环来删除。而有了xargs，可以直接这样用：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">find | grep &quot;\.log$&quot; | xargs rm</span><br></pre></td></tr></table></figure></p>
+<p>这样一句命令就完成了删除。在每次删除之前，都要验证下，是不是真的找到了想删除的文件。因为rm删除的文件很难找回来。</p>
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/Linux/" rel="tag">#Linux</a>
+          
+        </div>
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2017/06/21/Python-regex2/" rel="next" title="读书笔记-Python正则表达式2">
+                <i class="fa fa-chevron-left"></i> 读书笔记-Python正则表达式2
+              </a>
+            
+          </div>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2017/07/31/how-to-learn-JavaScript/" rel="prev" title="how to learn JavaScript？">
+                how to learn JavaScript？ <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+  <div class="comments" id="comments">
+    
+      <div class="ds-thread" data-thread-key="2017/07/24/bash-xargs/" data-title="Linux命令-xargs" data-url="http://1codelife.com/2017/07/24/bash-xargs/">
+      </div>
+    
+  </div>
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview sidebar-panel ">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+          <img class="site-author-image" itemprop="image" src="https://octodex.github.com/images/skitchtocat.png" alt="Quay & LinLin">
+          <p class="site-author-name" itemprop="name">Quay & LinLin</p>
+          <p class="site-description motion-element" itemprop="description"></p>
+        </div>
+        <nav class="site-state motion-element">
+          <div class="site-state-item site-state-posts">
+            <a href="/archives">
+              <span class="site-state-item-count">24</span>
+              <span class="site-state-item-name">日志</span>
+            </a>
+          </div>
+
+          
+            <div class="site-state-item site-state-categories">
+              <a href="/categories">
+                <span class="site-state-item-count">14</span>
+                <span class="site-state-item-name">分类</span>
+              </a>
+            </div>
+          
+
+          
+            <div class="site-state-item site-state-tags">
+              
+                <span class="site-state-item-count">38</span>
+                <span class="site-state-item-name">标签</span>
+              
+            </div>
+          
+
+        </nav>
+
+        
+
+        <div class="links-of-author motion-element">
+          
+        </div>
+
+        
+        
+
+        
+        
+
+      </section>
+
+      
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+            
+              
+            
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#介绍"><span class="nav-number">1.</span> <span class="nav-text">介绍</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#manual格式说明"><span class="nav-number">2.</span> <span class="nav-text">manual格式说明</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#xargs使用实例"><span class="nav-number">3.</span> <span class="nav-text">xargs使用实例</span></a></li></ol></div>
+            
+          </div>
+        </section>
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2019</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Quay & LinLin</span>
+</div>
+
+<div class="powered-by">
+  由 <a class="theme-link" href="http://hexo.io">Hexo</a> 强力驱动
+</div>
+
+<div class="theme-info">
+  主题 -
+  <a class="theme-link" href="https://github.com/iissnan/hexo-theme-next">
+    NexT.Mist
+  </a>
+</div>
+
+        
+
+        
+      </div>
+    </footer>
+
+    <div class="back-to-top">
+      <i class="fa fa-arrow-up"></i>
+    </div>
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+  
+  <script type="text/javascript" src="/vendors/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script type="text/javascript" src="/vendors/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  
+  <script type="text/javascript" src="/vendors/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  <script type="text/javascript" src="/vendors/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/vendors/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/vendors/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.0.1"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.0.1"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.0.1"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.0.1"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.0.1"></script>
+
+
+
+  
+
+  
+    
+  
+
+  <script type="text/javascript">
+    var duoshuoQuery = {short_name:"quay"};
+    (function() {
+      var ds = document.createElement('script');
+      ds.type = 'text/javascript';ds.async = true;
+      ds.id = 'duoshuo-script';
+      ds.src = (document.location.protocol == 'https:' ? 'https:' : 'http:') + '//static.duoshuo.com/embed.js';
+      ds.charset = 'UTF-8';
+      (document.getElementsByTagName('head')[0]
+      || document.getElementsByTagName('body')[0]).appendChild(ds);
+    })();
+  </script>
+
+  
+    
+    <script src="/vendors/ua-parser-js/dist/ua-parser.min.js?v=0.7.9"></script>
+    <script src="/js/src/hook-duoshuo.js"></script>
+  
+
+
+
+
+
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>
